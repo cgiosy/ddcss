@@ -1,10 +1,10 @@
 {
 	"name": "ddcss",
 	"version": "0.0.0",
-	"main": "src/index.ts",
+	"main": "index.mjs",
 	"type": "module",
 	"files": [
-		"dist/index.mjs"
+		"index.d.ts"
 	],
 	"devDependencies": {
 		"esbuild": "^0.14.38",
@@ -14,7 +14,7 @@
 		"xxh32": "^1.2.3"
 	},
 	"scripts": {
-		"build": "esbuild src/index.ts --bundle --format=esm --outfile=dist/index.mjs --target=es2019 --minify"
+		"build": "tsc --emitDeclarationOnly --noEmit false --isolatedModules false --outFile index.d.ts && esbuild src/index.ts --bundle --format=esm --outfile=index.mjs --target=es2019 --minify"
 	},
 	"author": "cgiosy",
 	"license": "MIT",

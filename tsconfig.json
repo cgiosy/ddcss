@@ -26,6 +26,7 @@
 		"module": "ESNext",
 		"moduleResolution": "Node",
 		"resolveJsonModule": true,
+		"declaration": true,
 		"isolatedModules": true,
 		"noEmit": true
 	}
