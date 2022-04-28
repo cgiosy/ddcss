@@ -1,3 +1,5 @@
 node_modules
 .pnpm-debug.log
-dist
+
+index.mjs
+index.d.ts
