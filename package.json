@@ -11,10 +11,10 @@
 	"devDependencies": {
 		"esbuild": "^0.14.38",
 		"npm-run-all": "^4.1.5",
-		"typescript": "^4.6.3"
+		"typescript": "^4.6.4"
 	},
 	"dependencies": {
-		"xxh32": "^1.2.3"
+		"xxh32": "^1.3.1"
 	},
 	"scripts": {
 		"build": "run-p build:*",
