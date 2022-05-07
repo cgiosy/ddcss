@@ -24,7 +24,7 @@ type CSSObject = {
 	[K: `$${Char}${string}`]: string | number;
 };
 
-const variablePattern = /(?!\\)\$[a-zA-Z0-9_]+/g;
+const variablePattern = /\\?\$[a-zA-Z0-9_]+/g;
 const propertyPattern = /^\$?[a-zA-Z0-9_]+$/;
 
 const keyToProp = (key: string) => (
@@ -42,9 +42,9 @@ const stringify = (
 	outMacros: MacroTable | null = null,
 ) => {
 	const { classBody, outsideCss } = _stringify(obj, parent, macros, outMacros);
-	return classBody !== ""
-		? `${parent}{${classBody}}${outsideCss}`
-		: outsideCss;
+	return classBody === ""
+		? outsideCss
+		: `${parent}{${classBody}}${outsideCss}`;
 };
 
 const _stringify = (
@@ -74,14 +74,20 @@ const _stringify = (
 		} else if (propertyPattern.test(key)) {
 			const prop = keyToProp(key);
 			const body = typeof value === "string"
-				? value.replace(variablePattern, nameToVar)
+				? value.replace(variablePattern, (match: string) =>
+					match[0] === "\\"
+						? match
+						: nameToVar(match))
 				: value;
 			classBody += `${prop}:${body};`;
 		} else if (key[0] === "@") {
 			const body = stringify(value as CSSObject, parent, macros);
 			if (body !== "") outsideCss += `${key}{${body}}`;
 		} else {
-			const selector = key.replace(/(?!\\)&/g, parent);
+			const selector = key.replace(/\\?&/g, (match: string) =>
+				match[0] === "\\"
+					? match
+					: parent);
 			outsideCss += stringify(value as CSSObject, selector, macros);
 		}
 	}
