@@ -63,7 +63,7 @@ const _stringify = (
 			const macroKey = key.slice(2);
 			const macro: Macro = {
 				fn: value as MacroFn,
-				table: { ...macros }, // O(N) copy
+				table: Object.assign(Object.create(Object.getPrototypeOf(macros)), macros),
 			};
 			macros[macroKey] = macro;
 		} else if (key in macros) {
