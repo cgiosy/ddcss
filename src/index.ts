@@ -109,10 +109,18 @@ const addToHead = (textContent: string) => {
 	document.head.appendChild(style);
 };
 
+const filterSet = new Set();
+const checkAndUpdateFilter = (className: string) => {
+	if (filterSet.has(className)) return false;
+	filterSet.add(className);
+	return true;
+};
+
 const $$css = (globalObj: CSSObject = {}, {
 	rootSelector = ":root",
 	tick = requestAnimationFrame as (callback: () => void) => unknown,
 	flush = addToHead as (textContent: string) => string | void,
+	filter = checkAndUpdateFilter as (className: string, obj: CSSObject) => boolean,
 } = {}) => {
 	const macros = Object.create(null);
 	let textContent = stringify(globalObj, rootSelector, null, macros);
@@ -124,8 +132,10 @@ const $$css = (globalObj: CSSObject = {}, {
 
 	const $css = (obj: CSSObject) => _stringify(obj, "", macros, null);
 	const css = (obj: CSSObject, className = hashCode(JSON.stringify(obj))) => {
-		textContent += stringify(obj, `.${className}`, macros);
-		tick(_flush);
+		if (filter(className, obj)) {
+			textContent += stringify(obj, `.${className}`, macros);
+			tick(_flush);
+		}
 		return className;
 	};
 	return {
