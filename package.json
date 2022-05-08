@@ -20,7 +20,7 @@
 		"build": "run-p build:*",
 		"build:types": "tsc --noEmit false --emitDeclarationOnly --outDir dist",
 		"build:bundle": "esbuild src/index.ts --bundle --format=esm --target=es2019 --external:xxh32 --minify --outfile=dist/index.js",
-		"publish": "run-s build && pnpm publish"
+		"prepack": "run-s build"
 	},
 	"author": "cgiosy",
 	"license": "MIT",
