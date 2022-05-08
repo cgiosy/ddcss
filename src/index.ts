@@ -121,6 +121,7 @@ const $$css = (globalObj: CSSObject = {}, {
 	const macros = Object.create(null);
 	let textContent = stringify(globalObj, rootSelector, macros, macros);
 	const _flush = () => {
+		if (textContent === "") return;
 		textContent = flush(textContent) || "";
 	};
 	tick(_flush);
