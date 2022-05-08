@@ -34,6 +34,13 @@ const keyToProp = (key: string) => (
 
 const nameToVar = (name: string) => `var(--${camelToKebab(name.slice(1))})`;
 
+const copy = (obj: any) => {
+	const copied = Object.create(null);
+	for (const key in obj)
+		copied[key] = obj[key];
+	return copied;
+};
+
 const stringify = (
 	obj: CSSObject,
 	parent = `.${hashCode(JSON.stringify(obj))}`,
@@ -62,7 +69,7 @@ const _stringify = (
 			const macroKey = key.slice(2);
 			const macro: Macro = {
 				fn: value as MacroFn,
-				table: Object.assign(Object.create(Object.getPrototypeOf(macros)), macros),
+				table: copy(macros),
 			};
 			macros[macroKey] = macro;
 		} else if (key in macros) {
@@ -118,7 +125,7 @@ const $$css = (globalObj: CSSObject = {}, {
 	flush = addToHead as (textContent: string) => string | void,
 } = {}) => {
 	const macros = Object.create(null);
-	let textContent = stringify(globalObj, rootSelector, macros, macros);
+	let textContent = stringify(globalObj, rootSelector, null, macros);
 	const _flush = () => {
 		if (textContent === "") return;
 		textContent = flush(textContent) || "";
