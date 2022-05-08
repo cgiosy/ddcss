@@ -31,7 +31,6 @@ module.exports = {
 		"no-unmodified-loop-condition": "warn",
 		"no-unreachable-loop": "warn",
 		"no-unused-vars": "off",
-		"no-use-before-define": "error",
 
 		"arrow-body-style": ["error", "as-needed"],
 		"camelcase": [

@@ -1,4 +1,3 @@
-/* eslint-disable no-use-before-define */
 import { camelToKebab } from "./util";
 import hashCode from "./hash";
 
