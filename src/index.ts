@@ -8,8 +8,6 @@ type Lowercase = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k"
 				| "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z";
 type Char = "_" | Digit | Uppercase | Lowercase;
 
-type RecursiveStringArray = (string | RecursiveStringArray)[];
-
 type Macro = {
 	fn: MacroFn,
 	table: MacroTable,
@@ -111,14 +109,6 @@ const addToHead = (textContent: string) => {
 	document.head.appendChild(style);
 };
 
-const cls = (arr: RecursiveStringArray) => (
-	arr
-		.flat(Infinity)
-		.filter(Boolean)
-		.sort()
-		.join(" ")
-);
-
 const $$css = (globalObj: CSSObject = {}, {
 	rootSelector = ":root",
 	tick = requestAnimationFrame as (callback: () => void) => unknown,
@@ -141,7 +131,6 @@ const $$css = (globalObj: CSSObject = {}, {
 	return {
 		$css,
 		css,
-		cls,
 	};
 };
 
