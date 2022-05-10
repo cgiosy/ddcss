@@ -118,7 +118,7 @@ const checkAndUpdateFilter = (className: string) => {
 
 const $$css = (globalObj: CSSObject = {}, {
 	root = ":root",
-	tick = requestAnimationFrame as (callback: () => void) => unknown,
+	tick = (queueMicrotask || setTimeout) as (callback: () => void) => unknown,
 	flush = addToHead as (textContent: string) => string | void,
 	filter = checkAndUpdateFilter as (className: string, obj: CSSObject) => boolean,
 } = {}) => {
