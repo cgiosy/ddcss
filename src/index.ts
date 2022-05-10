@@ -117,13 +117,13 @@ const checkAndUpdateFilter = (className: string) => {
 };
 
 const $$css = (globalObj: CSSObject = {}, {
-	rootSelector = ":root",
+	root = ":root",
 	tick = requestAnimationFrame as (callback: () => void) => unknown,
 	flush = addToHead as (textContent: string) => string | void,
 	filter = checkAndUpdateFilter as (className: string, obj: CSSObject) => boolean,
 } = {}) => {
 	const macros = Object.create(null);
-	let textContent = stringify(globalObj, rootSelector, null, macros);
+	let textContent = stringify(globalObj, root, null, macros);
 	const _flush = () => {
 		if (textContent === "") return;
 		textContent = flush(textContent) || "";
