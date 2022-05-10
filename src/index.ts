@@ -41,7 +41,7 @@ const copy = (obj: any) => {
 
 const stringify = (
 	obj: CSSObject,
-	parent = `.${hashCode(JSON.stringify(obj))}`,
+	parent: string,
 	macros: MacroTable | null = null,
 	outMacros: MacroTable | null = null,
 ) => {
@@ -110,9 +110,9 @@ const addToHead = (textContent: string) => {
 };
 
 const filterSet = new Set();
-const checkAndUpdateFilter = (className: string) => {
-	if (filterSet.has(className)) return false;
-	filterSet.add(className);
+const checkAndUpdateFilter = (hash: string) => {
+	if (filterSet.has(hash)) return false;
+	filterSet.add(hash);
 	return true;
 };
 
@@ -120,23 +120,31 @@ const $$css = (globalObj: CSSObject = {}, {
 	root = ":root",
 	tick = (queueMicrotask || setTimeout) as (callback: () => void) => unknown,
 	flush = addToHead as (textContent: string) => string | void,
-	filter = checkAndUpdateFilter as (className: string, obj: CSSObject) => boolean,
+	filter = checkAndUpdateFilter as (hash: string, obj: CSSObject) => boolean,
 } = {}) => {
 	const macros = Object.create(null);
-	let textContent = stringify(globalObj, root, null, macros);
-	const _flush = () => {
-		if (textContent === "") return;
-		textContent = flush(textContent) || "";
+	let textContent = "";
+	const tickFlush = (str: string = "") => {
+		textContent += str;
+		tick(() => {
+			if (textContent === "") return;
+			textContent = flush(textContent) || "";
+		})
 	};
-	tick(_flush);
+	tickFlush(stringify(globalObj, root, null, macros));
 
-	const $css = (obj: CSSObject) => _stringify(obj, "", macros, null);
-	const css = (obj: CSSObject, className = hashCode(JSON.stringify(obj))) => {
-		if (filter(className, obj)) {
-			textContent += stringify(obj, `.${className}`, macros);
-			tick(_flush);
+	const $css = (obj: CSSObject, className: string) => stringify(obj, className, macros);
+	const css = (obj: CSSObject, className: string | null = null) => {
+		if (className !== null) {
+			let result = $css(obj, className);
+			const hash = hashCode(result);
+			if (filter(hash, obj)) tickFlush(result);
+			return className;
 		}
-		return className;
+		let result = $css(obj, ".$&");
+		const hash = hashCode(result);
+		if (filter(hash, obj)) tickFlush(result.replace(/\.\$&/g, `.${hash}`));
+		return hash;
 	};
 	return {
 		$css,
