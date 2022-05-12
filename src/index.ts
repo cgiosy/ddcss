@@ -12,7 +12,7 @@ type Macro = {
 	fn: MacroFn,
 	table: MacroTable,
 };
-type MacroFn = (arg: unknown) => CSSObject;
+type MacroFn = (arg: any) => CSSObject;
 type MacroTable = { [K: string]: Macro };
 
 export type CSSObject = {
