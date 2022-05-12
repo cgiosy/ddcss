@@ -14,7 +14,8 @@ type Macro = {
 };
 type MacroFn = (arg: unknown) => CSSObject;
 type MacroTable = { [K: string]: Macro };
-type CSSObject = {
+
+export type CSSObject = {
 	[K: string]: unknown;
 	[K: `@${string}` | `${string}&${string}`]: CSSObject;
 	[K: `$$${string}`]: MacroFn;
