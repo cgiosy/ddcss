@@ -3,6 +3,8 @@ import hashCode from "./hash";
 
 const macroSymbol = Symbol("$$css.mvar");
 
+type Falsy = false | 0 | 0n | "" | null | undefined | void;
+
 type Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
 type Uppercase = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M"
 				| "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z";
@@ -25,7 +27,7 @@ export type CSSObject = {
 	[K: `@${string}` | `${string}&${string}`]: CSSObject;
 	[K: `$$${Char}${string}`]: MacroFn;
 	[K: `$${Char}${string}`]: string | number;
-	$$?: (key: string) => (string | undefined);
+	$$?: (key: string) => string | Falsy;
 };
 
 const macroVarPattern = /\\?\$\$[a-zA-Z0-9_]+/g;
@@ -47,8 +49,8 @@ const copy = (obj: any) => {
 	return copied;
 };
 
-const chainMacroVarFn = <T1, T2>(fn: (key: string) => T1, next: (key: string) => T2) => (
-	(key: string) => fn(key) ?? next(key)
+const chain = <T, T1, T2>(fn: (key: T) => T1, next: (key: T) => T2) => (
+	(key: T): Exclude<T1, Falsy> | T2 => fn(key) as any || next(key)
 );
 
 const initialMacros = Object.assign(Object.create(null), { [macroSymbol]: nameToVar });
@@ -79,8 +81,8 @@ const _stringify = (
 		const value = obj[key];
 		if (key[0] === "$" && key[1] === "$") {
 			if (key.length === 2) {
-				macros[macroSymbol] = chainMacroVarFn(
-					value as (key: string) => (string | undefined),
+				macros[macroSymbol] = chain(
+					value as (key: string) => string | Falsy,
 					macros[macroSymbol]
 				);
 				continue;
