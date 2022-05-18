@@ -53,7 +53,7 @@ const initialMacros = Object.assign(Object.create(null), { [macroSymbol]: nameTo
 const stringify = (
 	obj: CSSObject,
 	parent: string,
-	macros: MacroTable | undefined = initialMacros,
+	macros: MacroTable,
 	outMacros?: MacroTable,
 ) => {
 	const { classBody, outsideCss } = _stringify(obj, parent, macros, outMacros);
@@ -78,7 +78,7 @@ const _stringify = (
 			if (key.length === 2) {
 				macros[macroSymbol] = chain(
 					value as (key: string) => string | Falsy,
-					macros[macroSymbol]
+					macros[macroSymbol],
 				);
 				continue;
 			}
@@ -116,11 +116,11 @@ const _stringify = (
 			const body = stringify(value as CSSObject, parent, macros);
 			if (body !== "") outsideCss += `${key}{${body}}`;
 		} else {
-			const selector = key.replace(/\\?&/g, (match) =>
+			const selector = key.replace(/\\?&/g, (match) => (
 				match[0] === "\\"
 					? match
 					: parent
-			);
+			));
 			outsideCss += stringify(value as CSSObject, selector, macros);
 		}
 	}
@@ -153,14 +153,14 @@ const $$css = (globalObj: CSSObject = {}, {
 } = {}) => {
 	const macros = initialMacros;
 	let textContent = "";
-	const tickFlush = (str: string = "") => {
+	const tickFlush = (str = "") => {
 		textContent += str;
 		tick(() => {
 			if (textContent === "") return;
 			textContent = flush(textContent) || "";
-		})
+		});
 	};
-	tickFlush(stringify(globalObj, root, undefined, macros));
+	tickFlush(stringify(globalObj, root, initialMacros, macros));
 
 	const $css = (obj: CSSObject, className: string) => stringify(obj, className, macros);
 	const css = (obj: CSSObject, className?: string) => {
