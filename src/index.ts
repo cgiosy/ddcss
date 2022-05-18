@@ -23,8 +23,9 @@ type MacroTable = {
 export type CSSObject = {
 	[K: string]: unknown;
 	[K: `@${string}` | `${string}&${string}`]: CSSObject;
-	[K: `$$${string}`]: MacroFn;
+	[K: `$$${Char}${string}`]: MacroFn;
 	[K: `$${Char}${string}`]: string | number;
+	$$?: (key: string) => (string | undefined);
 };
 
 const macroVarPattern = /\\?\$\$[a-zA-Z0-9_]+/g;
