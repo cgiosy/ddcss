@@ -42,12 +42,7 @@ const keyToProp = (key: string) => (
 
 const nameToVar = (name: string) => `var(--${camelToKebab(name)})`;
 
-const copy = (obj: any) => {
-	const copied = Object.create(null);
-	for (const key in obj) copied[key] = obj[key];
-	for (const key of Object.getOwnPropertySymbols(obj)) copied[key] = obj[key];
-	return copied;
-};
+const copy = (obj: any) => Object.assign(Object.create(Object.getPrototypeOf(obj)), obj);
 
 const chain = <T, T1, T2>(fn: (key: T) => T1, next: (key: T) => T2) => (
 	(key: T): Exclude<T1, Falsy> | T2 => fn(key) as any || next(key)
@@ -73,7 +68,7 @@ const _stringify = (
 	inMacros: MacroTable,
 	outMacros?: MacroTable,
 ) => {
-	const macros: MacroTable = Object.create(inMacros);
+	let macros: MacroTable = Object.create(inMacros);
 	let classBody = "";
 	let outsideCss = "";
 
@@ -93,6 +88,7 @@ const _stringify = (
 				fn: value as MacroFn,
 				table: copy(macros),
 			};
+			macros = copy(macros);
 			macros[macroKey] = macro;
 		} else if (key in macros) {
 			const { fn, table } = macros[key]!;
