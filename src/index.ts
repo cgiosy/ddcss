@@ -1,6 +1,8 @@
 import { camelToKebab } from "./util";
 import hashCode from "./hash";
 
+const macroSymbol = Symbol("$$css.mvar");
+
 type Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
 type Uppercase = "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "I" | "J" | "K" | "L" | "M"
 				| "N" | "O" | "P" | "Q" | "R" | "S" | "T" | "U" | "V" | "W" | "X" | "Y" | "Z";
@@ -13,7 +15,10 @@ type Macro = {
 	table: MacroTable,
 };
 type MacroFn = (arg: any) => CSSObject;
-type MacroTable = { [K: string]: Macro };
+type MacroTable = {
+	[K: string]: Macro;
+	[macroSymbol]: (key: string) => string;
+};
 
 export type CSSObject = {
 	[K: string]: unknown;
@@ -22,6 +27,7 @@ export type CSSObject = {
 	[K: `$${Char}${string}`]: string | number;
 };
 
+const macroVarPattern = /\\?\$\$[a-zA-Z0-9_]+/g;
 const variablePattern = /\\?\$[a-zA-Z0-9_]+/g;
 const propertyPattern = /^\$?[a-zA-Z0-9_]+$/;
 
@@ -31,7 +37,7 @@ const keyToProp = (key: string) => (
 		: camelToKebab(key)
 );
 
-const nameToVar = (name: string) => `var(--${camelToKebab(name.slice(1))})`;
+const nameToVar = (name: string) => `var(--${camelToKebab(name)})`;
 
 const copy = (obj: any) => {
 	const copied = Object.create(null);
@@ -40,11 +46,17 @@ const copy = (obj: any) => {
 	return copied;
 };
 
+const chainMacroVarFn = <T1, T2>(fn: (key: string) => T1, next: (key: string) => T2) => (
+	(key: string) => fn(key) ?? next(key)
+);
+
+const initialMacros = Object.assign(Object.create(null), { [macroSymbol]: nameToVar });
+
 const stringify = (
 	obj: CSSObject,
 	parent: string,
-	macros: MacroTable | null = null,
-	outMacros: MacroTable | null = null,
+	macros: MacroTable | undefined = initialMacros,
+	outMacros?: MacroTable,
 ) => {
 	const { classBody, outsideCss } = _stringify(obj, parent, macros, outMacros);
 	return classBody === ""
@@ -55,8 +67,8 @@ const stringify = (
 const _stringify = (
 	obj: CSSObject,
 	parent: string,
-	inMacros: MacroTable | null,
-	outMacros: MacroTable | null,
+	inMacros: MacroTable,
+	outMacros?: MacroTable,
 ) => {
 	const macros: MacroTable = Object.create(inMacros);
 	let classBody = "";
@@ -65,6 +77,14 @@ const _stringify = (
 	for (const key of Object.keys(obj)) {
 		const value = obj[key];
 		if (key[0] === "$" && key[1] === "$") {
+			if (key.length === 2) {
+				macros[macroSymbol] = chainMacroVarFn(
+					value as (key: string) => (string | undefined),
+					macros[macroSymbol]
+				);
+				continue;
+			}
+
 			const macroKey = key.slice(2);
 			const macro: Macro = {
 				fn: value as MacroFn,
@@ -79,24 +99,32 @@ const _stringify = (
 		} else if (propertyPattern.test(key)) {
 			const prop = keyToProp(key);
 			const body = typeof value === "string"
-				? value.replace(variablePattern, (match: string) =>
-					match[0] === "\\"
-						? match
-						: nameToVar(match))
+				? value
+					.replace(macroVarPattern, (match) => (
+						match[0] === "\\"
+							? match
+							: macros[macroSymbol](match.slice(2))
+					))
+					.replace(variablePattern, (match) => (
+						match[0] === "\\"
+							? match
+							: nameToVar(match.slice(1))
+					))
 				: value;
 			classBody += `${prop}:${body};`;
 		} else if (key[0] === "@") {
 			const body = stringify(value as CSSObject, parent, macros);
 			if (body !== "") outsideCss += `${key}{${body}}`;
 		} else {
-			const selector = key.replace(/\\?&/g, (match: string) =>
+			const selector = key.replace(/\\?&/g, (match) =>
 				match[0] === "\\"
 					? match
-					: parent);
+					: parent
+			);
 			outsideCss += stringify(value as CSSObject, selector, macros);
 		}
 	}
-	if (outMacros !== null) Object.assign(outMacros, macros);
+	if (outMacros !== undefined) Object.assign(outMacros, macros);
 
 	return {
 		classBody,
@@ -123,7 +151,7 @@ const $$css = (globalObj: CSSObject = {}, {
 	flush = addToHead as (textContent: string) => string | void,
 	filter = checkAndUpdateFilter as (hash: string, obj: CSSObject) => boolean,
 } = {}) => {
-	const macros = Object.create(null);
+	const macros = initialMacros;
 	let textContent = "";
 	const tickFlush = (str: string = "") => {
 		textContent += str;
@@ -132,17 +160,18 @@ const $$css = (globalObj: CSSObject = {}, {
 			textContent = flush(textContent) || "";
 		})
 	};
-	tickFlush(stringify(globalObj, root, null, macros));
+	tickFlush(stringify(globalObj, root, undefined, macros));
 
 	const $css = (obj: CSSObject, className: string) => stringify(obj, className, macros);
-	const css = (obj: CSSObject, className: string | null = null) => {
-		if (className !== null) {
-			let result = $css(obj, className);
+	const css = (obj: CSSObject, className?: string) => {
+		if (className !== undefined) {
+			const result = $css(obj, className);
 			const hash = hashCode(result);
 			if (filter(hash, obj)) tickFlush(result);
 			return className;
 		}
-		let result = $css(obj, ".$&");
+
+		const result = $css(obj, ".$&");
 		const hash = hashCode(result);
 		if (filter(hash, obj)) tickFlush(result.replace(/\.\$&/g, `.${hash}`));
 		return hash;
