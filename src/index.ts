@@ -44,8 +44,8 @@ const nameToVar = (name: string) => `var(--${camelToKebab(name)})`;
 
 const copy = (obj: any) => {
 	const copied = Object.create(null);
-	for (const key in obj)
-		copied[key] = obj[key];
+	for (const key in obj) copied[key] = obj[key];
+	for (const key of Object.getOwnPropertySymbols(obj)) copied[key] = obj[key];
 	return copied;
 };
 
@@ -100,13 +100,14 @@ const _stringify = (
 			classBody += result.classBody;
 			outsideCss += result.outsideCss;
 		} else if (propertyPattern.test(key)) {
+			const macroVarFn = macros[macroSymbol];
 			const prop = keyToProp(key);
 			const body = typeof value === "string"
 				? value
 					.replace(macroVarPattern, (match) => (
 						match[0] === "\\"
 							? match
-							: macros[macroSymbol](match.slice(2))
+							: macroVarFn(match.slice(2))
 					))
 					.replace(variablePattern, (match) => (
 						match[0] === "\\"
