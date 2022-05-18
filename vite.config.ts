@@ -1,3 +1,8 @@
 import { defineConfig } from "vitest/config";
 
-export default defineConfig({ test: {} });
+export default defineConfig({
+	test: {
+		outputTruncateLength: 1000,
+		// reporters: "verbose",
+	},
+});

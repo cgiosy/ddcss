@@ -1,0 +1,17 @@
+// Vitest Snapshot v1
+
+exports[`basic > basic duplicate filtering 1`] = `"._djeiow{font-size:16px;font-family:serif;}"`;
+
+exports[`basic > basic macro variable 1`] = `":root{font-size:16dp;}._kln0i3{font-size:14;}._jqlkvk{font-size:18;}"`;
+
+exports[`basic > basic macros 1`] = `".__w9ras > *{font-size:32px;font-family:serif;color:red;}"`;
+
+exports[`basic > basic multiple css with macros 1`] = `"._rvbeky{font-size:32px;font-family:serif;}._nls01e{font-size:48px;font-family:serif;}"`;
+
+exports[`basic > basic props and children 1`] = `":root{--16dp:1rem;}._hrwqpr > *{font-size:var(--16dp);color:red;}"`;
+
+exports[`basic > empty args 1`] = `""`;
+
+exports[`macros > complex macro variables 1`] = `":root{font-size:1rem;}._fopicm{font-size:1rem;font-size:0.125rem;font-size:0.375rem;}._fopicm > *{font-size:0.5rem;font-size:1.875rem;}._o9qy6l{font-size:0.875rem;font-size:0.125rem;font-size:0.375rem;}._o9qy6l > *{font-size:0.5rem;font-size:1.875rem;}"`;
+
+exports[`macros > complex macros 1`] = `":root{--x:&f;--y:&g;}:root > *{--x:>Ff;--y:>Gg;}._jzlwen{--x:^f;--y:^g;}"`;
