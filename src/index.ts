@@ -23,7 +23,7 @@ type MacroTable = {
 };
 
 export type CSSObject = {
-	[K: string]: unknown;
+	[K: string]: any;
 	[K: `@${string}` | `${string}&${string}`]: CSSObject;
 	[K: `$$${Char}${string}`]: MacroFn;
 	[K: `$${Char}${string}`]: string | number;
