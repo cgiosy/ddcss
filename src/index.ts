@@ -68,7 +68,7 @@ const _stringify = (
 	inMacros: MacroTable,
 	outMacros?: MacroTable,
 ) => {
-	let macros: MacroTable = Object.create(inMacros);
+	const macros: MacroTable = Object.create(inMacros);
 	let classBody = "";
 	let outsideCss = "";
 
@@ -88,7 +88,6 @@ const _stringify = (
 				fn: value as MacroFn,
 				table: copy(macros),
 			};
-			macros = copy(macros);
 			macros[macroKey] = macro;
 		} else if (key in macros) {
 			const { fn, table } = macros[key]!;
@@ -151,7 +150,7 @@ const $$css = (globalObj: CSSObject = {}, {
 	flush = addToHead as (textContent: string) => string | void,
 	filter = checkAndUpdateFilter as (hash: string, obj: CSSObject) => boolean,
 } = {}) => {
-	const macros = initialMacros;
+	const macros = Object.create(initialMacros);
 	let textContent = "";
 	const tickFlush = (str = "") => {
 		textContent += str;

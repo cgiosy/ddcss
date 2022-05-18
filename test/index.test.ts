@@ -101,7 +101,20 @@ describe("basic", () => {
 });
 
 describe.concurrent("macros", () => {
-	test("complex macros", ({ expect }) => {
+	test("recursive-like macros", ({ expect }) => {
+		const { $$css, getOutput } = ddcss();
+		const { css } = $$css({
+			$$userSelect: (value) => ({
+				WebkitUserDrag: value,
+				WebkitUserSelect: value,
+				userSelect: value,
+			}),
+		});
+		css({ userSelect: "none" });
+		expect(getOutput()).toMatchSnapshot();
+	});
+
+	test("nested macros", ({ expect }) => {
 		const { $$css, getOutput } = ddcss();
 		const { css } = $$css({
 			$$f: (value) => ({ $x: `${value}f` }),
@@ -118,6 +131,25 @@ describe.concurrent("macros", () => {
 		css({
 			f: "^",
 			g: "^",
+		});
+		expect(getOutput()).toMatchSnapshot();
+	});
+
+	test("complex macros", ({ expect }) => {
+		const { $$css, getOutput } = ddcss();
+		$$css({
+			$$f: (a) => ({ $$g: (b) => ({ $$h: (c) => ({ $x: a * 100 + b * 10 + c }) }) }),
+			"& > *": {
+				"& > *": {
+					f: 1,
+					g: 2,
+					h: 3,
+				},
+				f: 4,
+				g: 5,
+				h: 6,
+			},
+			h: 9,
 		});
 		expect(getOutput()).toMatchSnapshot();
 	});
