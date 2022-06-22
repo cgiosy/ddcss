@@ -140,7 +140,7 @@ const checkAndUpdateFilter = (hash: string) => {
 	return true;
 };
 
-const $$css = (globalObj: CSSObject = {}, {
+const $$css = (globalObj: CSSObject | CSSObject[] = {}, {
 	root = ":root",
 	tick = (queueMicrotask || setTimeout) as (callback: () => void) => unknown,
 	flush = addToHead as (textContent: string) => string | void,
@@ -155,7 +155,8 @@ const $$css = (globalObj: CSSObject = {}, {
 			textContent = flush(textContent) || "";
 		});
 	};
-	tickFlush(stringify(globalObj, root, initialMacros, macros));
+	for (const obj of [globalObj].flat())
+		tickFlush(stringify(obj, root, copy(macros), macros));
 
 	const $css = (obj: CSSObject, className: string) => stringify(obj, className, macros);
 	const css = (obj: CSSObject, className?: string) => {
