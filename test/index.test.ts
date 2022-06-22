@@ -11,7 +11,7 @@ const ddcss = () => {
 		},
 	};
 	return {
-		$$css: (obj?: CSSObject, userConfig?: object) => $$css(obj, {
+		$$css: (obj?: CSSObject | CSSObject[], userConfig?: object) => $$css(obj, {
 			...config,
 			...userConfig,
 		}),
@@ -47,23 +47,13 @@ describe("basic", () => {
 				fontFamily: "serif",
 			}),
 		});
-		css({
-			"& > *": {
-				font: 32,
-				color: "red",
-			},
-		});
+		css({ "& > *": { font: 32 } });
 		expect(getOutput()).toMatchSnapshot();
 	});
 
 	test("basic multiple css with macros", ({ expect }) => {
 		const { $$css, getOutput } = ddcss();
-		const { css } = $$css({
-			$$font: (value) => ({
-				fontSize: `${value}px`,
-				fontFamily: "serif",
-			}),
-		});
+		const { css } = $$css({ $$font: (value) => ({ fontSize: `${value}px` }) });
 		css({
 			$$font2: (value) => ({ font: value * 2 }),
 			font2: 16,
@@ -75,16 +65,22 @@ describe("basic", () => {
 		expect(getOutput()).toMatchSnapshot();
 	});
 
+	test("basic multiple objects with macros", ({ expect }) => {
+		const { $$css, getOutput } = ddcss();
+		const { css } = $$css([
+			{ $$font: (value) => ({ fontSize: `${value}px` }) },
+			{ $$font2: (value) => ({ font: value * 2 }) },
+			{ $$font3: (value) => ({ font2: value * 3 }) },
+		]);
+		css({ font3: 16 });
+		expect(getOutput()).toMatchSnapshot();
+	});
+
 	test("basic duplicate filtering", ({ expect }) => {
 		const { $$css, getOutput } = ddcss();
-		const { css } = $$css({
-			$$font: (value) => ({
-				fontSize: `${value}px`,
-				fontFamily: "serif",
-			}),
-		});
-		css({ font: 16 });
-		css({ font: 16 });
+		const { css } = $$css();
+		css({ fontSize: "1rem" });
+		css({ fontSize: "1rem" });
 		expect(getOutput()).toMatchSnapshot();
 	});
 
@@ -166,16 +162,23 @@ describe.concurrent("macros", () => {
 		expect(getOutput()).toMatchSnapshot();
 	});
 
-	test("macro declaration in macro (not possible)", ({ expect }) => {
+	test("macro declaration in macro", ({ expect }) => {
 		const { $$css, getOutput } = ddcss();
-		$$css({
-			$$f: (x) => ({ $$g: (y) => ({ $x: x + Number(y) }) }),
-			$$h1: (x) => ({ g: x + 10 }),
-			f: 100,
-			$$h2: (x) => ({ g: x + 20 }),
-			h1: 1,
-			h2: 2,
-		});
+		$$css([
+			{ $$f: (x) => ({ $$g: (y) => ({ $x: x + Number(y) }) }) },
+			{
+				f: 100,
+				$$h1: (x) => ({ g: x + 10 }),
+			},
+			{
+				f: 200,
+				$$h2: (x) => ({ g: x + 20 }),
+			},
+			{
+				h1: 1,
+				h2: 2,
+			},
+		]);
 		expect(getOutput()).toMatchSnapshot();
 	});
 });
