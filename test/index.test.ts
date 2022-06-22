@@ -91,11 +91,11 @@ describe("basic", () => {
 	test("basic macro variable", ({ expect }) => {
 		const { $$css, getOutput } = ddcss();
 		const { css } = $$css({
-			$$: (key) => key.match(/^\d+dp$/) && `${Number(key.slice(0, -2)) / 16}rem`,
-			fontSize: "16dp",
+			$$: (key) => /^\d+dp$/.test(key) && `${Number(key.slice(0, -2)) / 16}rem`,
+			fontSize: "$$16dp",
 		});
-		css({ fontSize: 14 });
-		css({ fontSize: 18 });
+		css({ fontSize: "$$14dp" });
+		css({ fontSize: "$$18dp" });
 		expect(getOutput()).toMatchSnapshot();
 	});
 });
@@ -135,6 +135,18 @@ describe.concurrent("macros", () => {
 		expect(getOutput()).toMatchSnapshot();
 	});
 
+	test("macro combination", ({ expect }) => {
+		const { $$css, getOutput } = ddcss();
+		const { css } = $$css({
+			$$: (key) => /^\d+dp$/.test(key) && `${Number(key.slice(0, -2)) / 16}rem`,
+			$$fontSize: (value) => ({ fontSize: value }),
+			fontSize: "$$16dp",
+		});
+		css({ fontSize: "$$14dp" });
+		css({ fontSize: "$$18dp" });
+		expect(getOutput()).toMatchSnapshot();
+	});
+
 	test("complex macros", ({ expect }) => {
 		const { $$css, getOutput } = ddcss();
 		$$css({
@@ -154,39 +166,15 @@ describe.concurrent("macros", () => {
 		expect(getOutput()).toMatchSnapshot();
 	});
 
-	test("complex macro variables", ({ expect }) => {
+	test("macro declaration in macro (not possible)", ({ expect }) => {
 		const { $$css, getOutput } = ddcss();
-		const { css } = $$css({
-			$$dp: (value) => ({
-				fontSize: value > 0 ? `$$${value}dp` : "1rem",
-				$$: (key) => key.match(/^\d+dp$/) && `${Number(key.slice(0, -2)) / 16}rem`,
-			}),
-			dp: 0,
-
-			$$f: (value) => ({ dp: value * 2 }),
-			$$g: (value) => ({ dp: value * 3 }),
-		});
-		css({
-			dp: 16,
-			"& > *": {
-				$$f: (value) => ({ f: value * 4 }),
-				$$g: (value) => ({ g: value * 5 }),
-				f: 1,
-				g: 2,
-			},
-			f: 1,
-			g: 2,
-		});
-		css({
-			dp: 14,
-			"& > *": {
-				$$f: (value) => ({ f: value * 4 }),
-				$$g: (value) => ({ g: value * 5 }),
-				f: 1,
-				g: 2,
-			},
-			f: 1,
-			g: 2,
+		$$css({
+			$$f: (x) => ({ $$g: (y) => ({ $x: x + Number(y) }) }),
+			$$h1: (x) => ({ g: x + 10 }),
+			f: 100,
+			$$h2: (x) => ({ g: x + 20 }),
+			h1: 1,
+			h2: 2,
 		});
 		expect(getOutput()).toMatchSnapshot();
 	});

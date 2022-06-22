@@ -45,7 +45,7 @@ const nameToVar = (name: string) => `var(--${camelToKebab(name)})`;
 const copy = (obj: any) => Object.assign(Object.create(Object.getPrototypeOf(obj)), obj);
 
 const chain = <T, T1, T2>(fn: (key: T) => T1, next: (key: T) => T2) => (
-	(key: T): Exclude<T1, Falsy> | T2 => fn(key) as any || next(key)
+	(key: T): Exclude<T1, Falsy> | T2 => (fn(key) || next(key)) as any
 );
 
 const initialMacros = Object.assign(Object.create(null), { [macroSymbol]: nameToVar });
@@ -76,16 +76,13 @@ const _stringify = (
 		const value = obj[key];
 		if (key[0] === "$" && key[1] === "$") {
 			if (key.length === 2) {
-				macros[macroSymbol] = chain(
-					value as (key: string) => string | Falsy,
-					macros[macroSymbol],
-				);
+				macros[macroSymbol] = chain(value, macros[macroSymbol]);
 				continue;
 			}
 
 			const macroKey = key.slice(2);
 			const macro: Macro = {
-				fn: value as MacroFn,
+				fn: value,
 				table: copy(macros),
 			};
 			macros[macroKey] = macro;
@@ -95,14 +92,13 @@ const _stringify = (
 			classBody += result.classBody;
 			outsideCss += result.outsideCss;
 		} else if (propertyPattern.test(key)) {
-			const macroVarFn = macros[macroSymbol];
 			const prop = keyToProp(key);
 			const body = typeof value === "string"
 				? value
 					.replace(macroVarPattern, (match) => (
 						match[0] === "\\"
 							? match
-							: macroVarFn(match.slice(2))
+							: macros[macroSymbol](match.slice(2))
 					))
 					.replace(variablePattern, (match) => (
 						match[0] === "\\"
@@ -112,7 +108,7 @@ const _stringify = (
 				: value;
 			classBody += `${prop}:${body};`;
 		} else if (key[0] === "@") {
-			const body = stringify(value as CSSObject, parent, macros);
+			const body = stringify(value, parent, macros);
 			if (body !== "") outsideCss += `${key}{${body}}`;
 		} else {
 			const selector = key.replace(/\\?&/g, (match) => (
@@ -120,7 +116,7 @@ const _stringify = (
 					? match
 					: parent
 			));
-			outsideCss += stringify(value as CSSObject, selector, macros);
+			outsideCss += stringify(value, selector, macros);
 		}
 	}
 	if (outMacros !== undefined) Object.assign(outMacros, macros);
