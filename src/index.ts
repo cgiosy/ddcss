@@ -14,7 +14,7 @@ type Char = "_" | Digit | Uppercase | Lowercase;
 
 type Macro = {
 	fn: MacroFn,
-	table: MacroTable,
+	table: MacroTable | null,
 };
 type MacroFn = (arg: any) => CSSObject;
 type MacroTable = {
@@ -81,14 +81,15 @@ const _stringify = (
 			}
 
 			const macroKey = key.slice(2);
+			const guard = macroKey[0]!.toUpperCase() !== macroKey[0];
 			const macro: Macro = {
 				fn: value,
-				table: copy(macros),
+				table: guard ? copy(macros) : null,
 			};
 			macros[macroKey] = macro;
 		} else if (key in macros) {
 			const { fn, table } = macros[key]!;
-			const result = _stringify(fn(value), parent, table, macros);
+			const result = _stringify(fn(value), parent, table ?? copy(macros), macros);
 			classBody += result.classBody;
 			outsideCss += result.outsideCss;
 		} else if (propertyPattern.test(key)) {

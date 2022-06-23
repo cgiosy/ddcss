@@ -181,4 +181,20 @@ describe.concurrent("macros", () => {
 		]);
 		expect(getOutput()).toMatchSnapshot();
 	});
+
+	test("macro without guard", ({ expect }) => {
+		const { $$css, getOutput } = ddcss();
+		$$css([
+			{ $$F: (x) => ({ f: x + 100 }) },
+			{
+				$$f: (x) => ({ $x: x + 10 }),
+				F: 1,
+			},
+			{
+				$$f: (x) => ({ $x: x + 20 }),
+				F: 1,
+			},
+		]);
+		expect(getOutput()).toMatchSnapshot();
+	});
 });

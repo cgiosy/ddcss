@@ -18,9 +18,11 @@ exports[`macros > complex macros 1`] = `":root{h:9;}:root > *{--x:456;}:root > *
 
 exports[`macros > macro combination 1`] = `":root{font-size:1rem;}"`;
 
-exports[`macros > macro declaration in macro (not possible) 1`] = `":root{g:11;--x:122;}"`;
-
 exports[`macros > macro declaration in macro 1`] = `":root{--x:111;--x:222;}"`;
+
+exports[`macros > macro ioc 1`] = `":root{--x:111;}:root{--x:121;}"`;
+
+exports[`macros > macro without guard 1`] = `":root{--x:111;}:root{--x:121;}"`;
 
 exports[`macros > nested macros 1`] = `":root{--x:&f;--y:&g;}:root > *{--x:>Ff;--y:>Gg;}._jzlwen{--x:^f;--y:^g;}"`;
 
