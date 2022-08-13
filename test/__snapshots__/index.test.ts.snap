@@ -16,11 +16,9 @@ exports[`basic > empty args 1`] = `""`;
 
 exports[`macros > complex macros 1`] = `":root{h:9;}:root > *{--x:456;}:root > * > *{--x:123;}"`;
 
-exports[`macros > macro combination 1`] = `":root{font-size:1rem;}"`;
+exports[`macros > macro combination 1`] = `":root{font-size:1rem;}._irjocx{font-size:0.875rem;}._h6o4jl{font-size:1.125rem;}"`;
 
 exports[`macros > macro declaration in macro 1`] = `":root{--x:111;--x:222;}"`;
-
-exports[`macros > macro ioc 1`] = `":root{--x:111;}:root{--x:121;}"`;
 
 exports[`macros > macro without guard 1`] = `":root{--x:111;}:root{--x:121;}"`;
 

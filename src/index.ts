@@ -22,6 +22,12 @@ type MacroTable = {
 	[macroSymbol]: (key: string) => string;
 };
 
+type Callback = () => void;
+type TickFn = (callback: Callback) => unknown;
+type FlushFn = (textContent: string) => string | void;
+type FilterFn = (hash: string, obj: CSSObject) => boolean;
+type FilterGenerator = () => FilterFn;
+
 export type CSSObject = {
 	[K: string]: any;
 	[K: `@${string}` | `${string}&${string}`]: CSSObject;
@@ -134,19 +140,22 @@ const addToHead = (textContent: string) => {
 	document.head.appendChild(style);
 };
 
-const filterSet = new Set();
-const checkAndUpdateFilter = (hash: string) => {
-	if (filterSet.has(hash)) return false;
-	filterSet.add(hash);
-	return true;
+const basicFilterGenerator = () => {
+	const filterSet = new Set();
+	return (hash: string) => {
+		if (filterSet.has(hash)) return false;
+		filterSet.add(hash);
+		return true;
+	};
 };
 
 const $$css = (globalObj: CSSObject | CSSObject[] = {}, {
 	root = ":root",
-	tick = (queueMicrotask || setTimeout) as (callback: () => void) => unknown,
-	flush = addToHead as (textContent: string) => string | void,
-	filter = checkAndUpdateFilter as (hash: string, obj: CSSObject) => boolean,
+	tick = (queueMicrotask || setTimeout) as TickFn,
+	flush = addToHead as FlushFn,
+	filter = basicFilterGenerator as FilterGenerator,
 } = {}) => {
+	const checkFilter = filter();
 	const macros = Object.create(initialMacros);
 	let textContent = "";
 	let flushing = false;
@@ -169,13 +178,13 @@ const $$css = (globalObj: CSSObject | CSSObject[] = {}, {
 		if (className !== undefined) {
 			const result = $css(obj, className);
 			const hash = hashCode(result);
-			if (filter(hash, obj)) tickFlush(result);
+			if (checkFilter(hash, obj)) tickFlush(result);
 			return className;
 		}
 
 		const result = $css(obj, ".$&");
 		const hash = hashCode(result);
-		if (filter(hash, obj)) tickFlush(result.replace(/\.\$&/g, `.${hash}`));
+		if (checkFilter(hash, obj)) tickFlush(result.replace(/\.\$&/g, `.${hash}`));
 		return hash;
 	};
 	return {
