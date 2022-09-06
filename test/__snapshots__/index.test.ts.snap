@@ -10,6 +10,8 @@ exports[`basic > basic multiple css with macros 1`] = `"._wc1o8m{font-size:32px;
 
 exports[`basic > basic multiple objects with macros 1`] = `"._i6gaz3{font-size:96px;}"`;
 
+exports[`basic > basic multiple selectors with macros 1`] = `".a:hover, .a:active,.b:hover, .b:active,.c:hover, .c:active{display:none;}"`;
+
 exports[`basic > basic props and children 1`] = `":root{--16dp:1rem;}._hrwqpr > *{font-size:var(--16dp);color:red;}"`;
 
 exports[`basic > empty args 1`] = `""`;

@@ -118,11 +118,19 @@ const _stringify = (
 			const body = stringify(value, parent, macros);
 			if (body !== "") outsideCss += `${key}{${body}}`;
 		} else {
-			const selector = key.replace(/\\?&/g, (match) => (
-				match[0] === "\\"
-					? match
-					: parent
-			));
+			const selector = (
+				parent
+					.split(",")
+					.map((parentSelector) => {
+						const selector = parentSelector.trim();
+						return key.replace(/\\?&/g, (match) => (
+							match[0] === "\\"
+								? match
+								: selector
+						));
+					})
+					.join(",")
+			);
 			outsideCss += stringify(value, selector, macros);
 		}
 	}

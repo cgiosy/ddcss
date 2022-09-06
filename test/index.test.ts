@@ -65,6 +65,13 @@ describe("basic", () => {
 		expect(getOutput()).toMatchSnapshot();
 	});
 
+	test("basic multiple selectors with macros", ({ expect }) => {
+		const { $$css, getOutput } = ddcss();
+		const { css } = $$css({ $$_hover: (value) => ({ "&:hover, &:active": value }) });
+		css({ ".a, .b, .c": { _hover: { display: "none" } } });
+		expect(getOutput()).toMatchSnapshot();
+	});
+
 	test("basic multiple objects with macros", ({ expect }) => {
 		const { $$css, getOutput } = ddcss();
 		const { css } = $$css([
