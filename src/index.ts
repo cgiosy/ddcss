@@ -171,12 +171,13 @@ const $$css = (globalObj: CSSObject | CSSObject[] = {}, {
 		textContent += str;
 		if (textContent !== "" && !flushing) {
 			flushing = true;
-			tick(() => {
-				flushing = false;
-				textContent = flush(textContent) || "";
-				tickFlush();
-			});
+			tick(tickFlush2);
 		}
+	};
+	const tickFlush2 = () => {
+		flushing = false;
+		textContent = flush(textContent) || "";
+		tickFlush();
 	};
 	for (const obj of [globalObj].flat())
 		tickFlush(stringify(obj, root, copy(macros), macros));
