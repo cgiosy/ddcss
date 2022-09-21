@@ -156,9 +156,10 @@ describe.concurrent("macros", () => {
 	test("macro combination 2", ({ expect }) => {
 		const { $$css, getOutput } = ddcss();
 		$$css({
-			$$: (key) => /^\d+dp$/.test(key) && `${Number(key.slice(0, -2)) / 16}rem`,
+			$$: (key) => /^[\d.]+dp$/.test(key) && `${Number(key.slice(0, -2)) / 16}rem`,
 			$x: `16dp'16dp"24dp"32dp'32dp`,
 			$y: `16dp '16dp "24dp" 32dp' 32dp`,
+			$z: `1.234dp`,
 		});
 		expect(getOutput()).toMatchSnapshot();
 	});

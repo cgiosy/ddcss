@@ -20,7 +20,7 @@ exports[`macros > complex macros 1`] = `":root{h:9;}:root > *{--x:456;}:root > *
 
 exports[`macros > macro combination 1 1`] = `":root{font-size:1rem;}._irjocx{font-size:0.875rem;}._h6o4jl{font-size:1.125rem;}"`;
 
-exports[`macros > macro combination 2 1`] = `":root{--x:1rem'16dp\\"24dp\\"32dp'2rem;--y:1rem '16dp \\"24dp\\" 32dp' 2rem;}"`;
+exports[`macros > macro combination 2 1`] = `":root{--x:1rem'16dp\\"24dp\\"32dp'2rem;--y:1rem '16dp \\"24dp\\" 32dp' 2rem;--z:0.077125rem;}"`;
 
 exports[`macros > macro declaration in macro 1`] = `":root{--x:111;--x:222;}"`;
 

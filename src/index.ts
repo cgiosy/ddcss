@@ -119,26 +119,19 @@ const _stringify = (
 				const c = value.charCodeAt(cur);
 				const next = cur + 1 | 0;
 				if (quote === 0) {
-					// [^0-9A-Za-z$_\\-]
-					if (!(
-						48 <= c && c <= 57
-						|| 65 <= c && c <= 90
-						|| 97 <= c && c <= 122
-						|| c === 36
-						|| c === 45
-						|| c === 92
-						|| c === 95
-					)) {
+					// [ "'()*,/]
+					if (c <= 32 || c === 34 || c === 39 || c === 40 || c === 41 || c === 42 || c === 44 || c === 47) {
 						if (last < cur) {
 							body += macro(value.slice(last, cur), key);
 							last = cur;
 						}
 
-						// [^'"]
-						if (c !== 34 && c !== 39) {
+						// ["']
+						if (c === 34 || c === 39) quote = c;
+						else {
 							body += String.fromCharCode(c);
 							last = next;
-						} else quote = c;
+						}
 					}
 				} else if (quote === c) {
 					quote = 0;
