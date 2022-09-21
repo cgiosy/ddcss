@@ -1,7 +1,7 @@
 import { camelToKebab } from "./util";
 import hashCode from "./hash";
 
-const macroSymbol = Symbol("$$css.mvar");
+const tokenSymbol = Symbol("$$css.token");
 
 type Falsy = false | 0 | 0n | "" | null | undefined | void;
 
@@ -17,9 +17,10 @@ type Macro = {
 	table: MacroTable | null,
 };
 type MacroFn = (arg: any) => CSSObject;
+type TokenFn = (key: string, property: string) => string | Falsy;
 type MacroTable = {
 	[K: string]: Macro;
-	[macroSymbol]: (key: string) => string;
+	[tokenSymbol]: TokenFn;
 };
 
 type Callback = () => void;
@@ -33,12 +34,12 @@ export type CSSObject = {
 	[K: `@${string}` | `${string}&${string}`]: CSSObject;
 	[K: `$$${Char}${string}`]: MacroFn;
 	[K: `$${Char}${string}`]: string | number;
-	$$?: (key: string) => string | Falsy;
+	$$?: TokenFn;
 };
 
-const macroVarPattern = /\\?\$\$[a-zA-Z0-9_]+/g;
-const variablePattern = /\\?\$[a-zA-Z0-9_]+/g;
-const propertyPattern = /^\$?[a-zA-Z0-9_]+$/;
+const isProperty = (key: string): key is `$${Char}${string}` => /^\$?[0-9A-Za-z_]+$/.test(key);
+const isMacroKey = (key: string): key is `$$${Char}${string}` => key[0] === "$" && key[1] === "$";
+const isAtRule = (key: string): key is `@${string}` => key[0] === "@";
 
 const keyToProp = (key: string) => (
 	key[0] === "$"
@@ -46,15 +47,22 @@ const keyToProp = (key: string) => (
 		: camelToKebab(key)
 );
 
-const nameToVar = (name: string) => `var(--${camelToKebab(name)})`;
+const tokenFallback = (key: string) => (
+	key[0] === "$"
+		? `var(--${camelToKebab(key.slice(1))})`
+		: key
+);
 
 const copy = (obj: any) => Object.assign(Object.create(Object.getPrototypeOf(obj)), obj);
 
-const chain = <T, T1, T2>(fn: (key: T) => T1, next: (key: T) => T2) => (
-	(key: T): Exclude<T1, Falsy> | T2 => (fn(key) || next(key)) as any
+const chain = <T extends unknown[], T1, T2>(fn: (...args: T) => T1, next: (...args: T) => T2) => (
+	(...args: T): Exclude<T1, Falsy> | T2 => (fn(...args) || next(...args)) as any
 );
 
-const initialMacros = Object.assign(Object.create(null), { [macroSymbol]: nameToVar });
+const initialMacros: MacroTable = Object.assign(
+	Object.create(null),
+	{ [tokenSymbol]: tokenFallback },
+);
 
 const stringify = (
 	obj: CSSObject,
@@ -79,10 +87,10 @@ const _stringify = (
 	let outsideCss = "";
 
 	for (const key of Object.keys(obj)) {
-		const value = obj[key];
-		if (key[0] === "$" && key[1] === "$") {
+		let value = obj[key];
+		if (isMacroKey(key)) {
 			if (key.length === 2) {
-				macros[macroSymbol] = chain(value, macros[macroSymbol]);
+				macros[tokenSymbol] = chain(value, macros[tokenSymbol]);
 				continue;
 			}
 
@@ -98,27 +106,54 @@ const _stringify = (
 			const result = _stringify(fn(value), parent, table ?? copy(macros), macros);
 			classBody += result.classBody;
 			outsideCss += result.outsideCss;
-		} else if (propertyPattern.test(key)) {
+		} else if (isProperty(key)) {
+			value = value.toString();
+			const macro = macros[tokenSymbol];
 			const prop = keyToProp(key);
-			const body = typeof value === "string"
-				? value
-					.replace(macroVarPattern, (match) => (
-						match[0] === "\\"
-							? match
-							: macros[macroSymbol](match.slice(2))
-					))
-					.replace(variablePattern, (match) => (
-						match[0] === "\\"
-							? match
-							: nameToVar(match.slice(1))
-					))
-				: value;
+			const len = value.length | 0;
+			let body = "";
+			let cur = 0;
+			let last = 0;
+			let quote = 0;
+			while (cur < len) {
+				const c = value.charCodeAt(cur);
+				const next = cur + 1 | 0;
+				if (quote === 0) {
+					// [^0-9A-Za-z$_\\-]
+					if (!(
+						48 <= c && c <= 57
+						|| 65 <= c && c <= 90
+						|| 97 <= c && c <= 122
+						|| c === 36
+						|| c === 45
+						|| c === 92
+						|| c === 95
+					)) {
+						if (last < cur) {
+							body += macro(value.slice(last, cur), key);
+							last = cur;
+						}
+
+						// [^'"]
+						if (c !== 34 && c !== 39) {
+							body += String.fromCharCode(c);
+							last = next;
+						} else quote = c;
+					}
+				} else if (quote === c) {
+					quote = 0;
+					body += macro(value.slice(last, next), key);
+					last = next;
+				}
+				cur = next;
+			}
+			if (last < len) body += macro(value.slice(last), key);
 			classBody += `${prop}:${body};`;
-		} else if (key[0] === "@") {
+		} else if (isAtRule(key)) {
 			const body = stringify(value, parent, macros);
 			if (body !== "") outsideCss += `${key}{${body}}`;
 		} else {
-			const selector = (
+			const selectors = (
 				parent
 					.split(",")
 					.map((parentSelector) => {
@@ -131,7 +166,7 @@ const _stringify = (
 					})
 					.join(",")
 			);
-			outsideCss += stringify(value, selector, macros);
+			outsideCss += stringify(value, selectors, macros);
 		}
 	}
 	if (outMacros !== undefined) Object.assign(outMacros, macros);

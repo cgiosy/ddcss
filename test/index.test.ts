@@ -95,10 +95,13 @@ describe("basic", () => {
 		const { $$css, getOutput } = ddcss();
 		const { css } = $$css({
 			$$: (key) => /^\d+dp$/.test(key) && `${Number(key.slice(0, -2)) / 16}rem`,
-			fontSize: "$$16dp",
+			fontSize: "16dp",
 		});
-		css({ fontSize: "$$14dp" });
-		css({ fontSize: "$$18dp" });
+		css({
+			$$: (key) => /^\$\$\d+dp$/.test(key) && `${Number(key.slice(2, -2))}rem`,
+			fontSize: "$$10dp",
+		});
+		css({ fontSize: "18dp" });
 		expect(getOutput()).toMatchSnapshot();
 	});
 });
@@ -138,15 +141,25 @@ describe.concurrent("macros", () => {
 		expect(getOutput()).toMatchSnapshot();
 	});
 
-	test("macro combination", ({ expect }) => {
+	test("macro combination 1", ({ expect }) => {
 		const { $$css, getOutput } = ddcss();
 		const { css } = $$css({
 			$$: (key) => /^\d+dp$/.test(key) && `${Number(key.slice(0, -2)) / 16}rem`,
 			$$fontSize: (value) => ({ fontSize: value }),
-			fontSize: "$$16dp",
+			fontSize: "16dp",
 		});
-		css({ fontSize: "$$14dp" });
-		css({ fontSize: "$$18dp" });
+		css({ fontSize: "14dp" });
+		css({ fontSize: "18dp" });
+		expect(getOutput()).toMatchSnapshot();
+	});
+
+	test("macro combination 2", ({ expect }) => {
+		const { $$css, getOutput } = ddcss();
+		$$css({
+			$$: (key) => /^\d+dp$/.test(key) && `${Number(key.slice(0, -2)) / 16}rem`,
+			$x: `16dp'16dp"24dp"32dp'32dp`,
+			$y: `16dp '16dp "24dp" 32dp' 32dp`,
+		});
 		expect(getOutput()).toMatchSnapshot();
 	});
 
