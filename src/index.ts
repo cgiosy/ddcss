@@ -29,6 +29,12 @@ type FlushFn = (textContent: string) => string | void;
 type FilterFn = (hash: string, obj: CSSObject) => boolean;
 type FilterGenerator = () => FilterFn;
 
+export type GlobalMacro = {
+	[K: `$$${Char}${string}`]: MacroFn;
+	[K: `$${Char}${string}`]: string | number;
+	$$?: TokenFn;
+};
+
 export type CSSObject = {
 	[K: string]: any;
 	[K: `@${string}` | `${string}&${string}`]: CSSObject;
@@ -185,7 +191,7 @@ const basicFilterGenerator = () => {
 	};
 };
 
-const $$css = (globalObj: CSSObject | CSSObject[] = {}, {
+const $$css = (globalMacros: GlobalMacro | GlobalMacro[] = {}, {
 	root = ":root",
 	tick = (queueMicrotask || setTimeout) as TickFn,
 	flush = addToHead as FlushFn,
@@ -207,7 +213,7 @@ const $$css = (globalObj: CSSObject | CSSObject[] = {}, {
 		textContent = flush(textContent) || "";
 		tickFlush();
 	};
-	for (const obj of [globalObj].flat())
+	for (const obj of [globalMacros].flat())
 		tickFlush(stringify(obj, root, copy(macros), macros));
 
 	const $css = (obj: CSSObject, className: string) => stringify(obj, className, macros);
