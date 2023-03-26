@@ -17,7 +17,7 @@ type Macro = {
 	table: MacroTable | null,
 };
 type MacroFn = (arg: any) => CSSObject;
-type TokenFn = (key: string, property: string) => string | Falsy;
+type TokenFn = (value: string, key: string) => string | Falsy;
 type MacroTable = {
 	[K: string]: Macro;
 	[tokenSymbol]: TokenFn;
