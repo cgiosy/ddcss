@@ -94,14 +94,21 @@ describe("basic", () => {
 	test("basic macro variable", ({ expect }) => {
 		const { $$css, getOutput } = ddcss();
 		const { css } = $$css({
-			$$: (key) => /^\d+dp$/.test(key) && `${Number(key.slice(0, -2)) / 16}rem`,
+			$$: (value) => /^\d+dp$/.test(value) && `${Number(value.slice(0, -2)) / 16}rem`,
 			fontSize: "16dp",
 		});
 		css({
-			$$: (key) => /^\$\$\d+dp$/.test(key) && `${Number(key.slice(2, -2))}rem`,
+			$$: (value) => /^\$\$\d+dp$/.test(value) && `${Number(value.slice(2, -2))}rem`,
 			fontSize: "$$10dp",
 		});
 		css({ fontSize: "18dp" });
+		expect(getOutput()).toMatchSnapshot();
+	});
+
+	test("basic quotes", ({ expect }) => {
+		const { $$css, getOutput } = ddcss();
+		const { css } = $$css({ $$: (value) => value.replace(/\\'quotes\\'/, "[REDACTED]") });
+		css({ $x: "'https://example.com/\\'quotes\\''" });
 		expect(getOutput()).toMatchSnapshot();
 	});
 });
@@ -144,7 +151,7 @@ describe.concurrent("macros", () => {
 	test("macro combination 1", ({ expect }) => {
 		const { $$css, getOutput } = ddcss();
 		const { css } = $$css({
-			$$: (key) => /^\d+dp$/.test(key) && `${Number(key.slice(0, -2)) / 16}rem`,
+			$$: (value) => /^\d+dp$/.test(value) && `${Number(value.slice(0, -2)) / 16}rem`,
 			$$fontSize: (value) => ({ fontSize: value }),
 			fontSize: "16dp",
 		});
@@ -156,7 +163,7 @@ describe.concurrent("macros", () => {
 	test("macro combination 2", ({ expect }) => {
 		const { $$css, getOutput } = ddcss();
 		$$css({
-			$$: (key) => /^[\d.]+dp$/.test(key) && `${Number(key.slice(0, -2)) / 16}rem`,
+			$$: (value) => /^[\d.]+dp$/.test(value) && `${Number(value.slice(0, -2)) / 16}rem`,
 			$x: `16dp'16dp"24dp"32dp'32dp`,
 			$y: `16dp '16dp "24dp" 32dp' 32dp`,
 			$z: `1.234dp`,

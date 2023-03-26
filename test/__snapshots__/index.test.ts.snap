@@ -14,6 +14,8 @@ exports[`basic > basic multiple selectors with macros 1`] = `".a:hover, .a:activ
 
 exports[`basic > basic props and children 1`] = `":root{--16dp:1rem;}._hrwqpr > *{font-size:var(--16dp);color:red;}"`;
 
+exports[`basic > basic quotes 1`] = `"._ks4ab8{--x:'https://example.com/[REDACTED]';}"`;
+
 exports[`basic > empty args 1`] = `""`;
 
 exports[`macros > complex macros 1`] = `":root{h:9;}:root > *{--x:456;}:root > * > *{--x:123;}"`;

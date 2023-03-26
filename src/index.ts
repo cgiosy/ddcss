@@ -145,6 +145,11 @@ const _stringify = (
 					const b = value.charCodeAt(i);
 					buf += String.fromCharCode(b);
 					if (b === c) break;
+					if (b === 92) {
+						i = i + 1 | 0;
+						if (i >= len) break;
+						buf += String.fromCharCode(value.charCodeAt(i));
+					}
 					i = i + 1 | 0;
 				}
 				body += macro(buf, key);
