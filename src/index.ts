@@ -118,35 +118,39 @@ const _stringify = (
 			const prop = keyToProp(key);
 			const len = value.length | 0;
 			let body = "";
-			let cur = 0;
-			let last = 0;
-			let quote = 0;
-			while (cur < len) {
-				const c = value.charCodeAt(cur);
-				const next = cur + 1 | 0;
-				if (quote === 0) {
-					// [ "'()*,/]
-					if (c <= 32 || c === 34 || c === 39 || c === 40 || c === 41 || c === 42 || c === 44 || c === 47) {
-						if (last < cur) {
-							body += macro(value.slice(last, cur), key);
-							last = cur;
-						}
+			let buf = "";
+			for (let i = 0; i < len; i = i + 1 | 0) {
+				const c = value.charCodeAt(i);
 
-						// ["']
-						if (c === 34 || c === 39) quote = c;
-						else {
-							body += String.fromCharCode(c);
-							last = next;
-						}
-					}
-				} else if (quote === c) {
-					quote = 0;
-					body += macro(value.slice(last, next), key);
-					last = next;
+				// [^ "'()*,/]
+				if (c > 32 && c !== 34 && c !== 39 && c !== 40 && c !== 41 && c !== 42 && c !== 44 && c !== 47) {
+					buf += String.fromCharCode(c);
+					continue;
 				}
-				cur = next;
+
+				if (buf !== "") {
+					body += macro(buf, key);
+					buf = "";
+				}
+
+				// [^"']
+				if (c !== 34 && c !== 39) {
+					body += String.fromCharCode(c);
+					continue;
+				}
+
+				buf = String.fromCharCode(c);
+				i = i + 1 | 0;
+				while (i < len) {
+					const b = value.charCodeAt(i);
+					buf += String.fromCharCode(b);
+					if (b === c) break;
+					i = i + 1 | 0;
+				}
+				body += macro(buf, key);
+				buf = "";
 			}
-			if (last < len) body += macro(value.slice(last), key);
+			if (buf !== "") body += macro(buf, key);
 			classBody += `${prop}:${body};`;
 		} else if (isAtRule(key)) {
 			const body = stringify(value, parent, macros);
